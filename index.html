@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Tabela com Contadores</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .day-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .day-title {
+            font-size: 1rem;
+        }
+        
+        .day-control {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .day-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .day-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .time-cell {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: 600;
+            width: 100px;
+        }
+        
+        .editable-cell {
+            min-width: 140px;
+            background-color: #f8f9fa;
+        }
+        
+        .counter-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        
+        .counter-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            min-width: 60px;
+            color: #2c3e50;
+        }
+        
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-subtract {
+            background-color: #e74c3c;
+        }
+        
+        .btn-subtract:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-add {
+            background-color: #2ecc71;
+        }
+        
+        .btn-add:hover {
+            background-color: #27ae60;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background-color: #8e44ad;
+            transform: translateY(-2px);
+        }
+        
+        .reset-btn {
+            background-color: #e67e22;
+        }
+        
+        .reset-btn:hover {
+            background-color: #d35400;
+        }
+        
+        .export-btn {
+            background-color: #1abc9c;
+        }
+        
+        .export-btn:hover {
+            background-color: #16a085;
+        }
+        
+        .image-btn {
+            background-color: #e74c3c;
+        }
+        
+        .image-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .stat-box {
+            background-color: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px 20px;
+            margin-top: 30px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .file-input {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background-color: #2980b9;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .modal-confirm {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .modal-cancel {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #2ecc71;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.error {
+            background-color: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            th, td {
+                padding: 10px 5px;
+            }
+            
+            .counter-value {
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+            
+            .day-header {
+                gap: 5px;
+            }
+            
+            .day-btn {
+                padding: 3px 6px;
+                font-size: 0.7rem;
+            }
+            
+            .toast {
+                left: 20px;
+                right: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Editor de Tabela com Contadores</h1>
+            <p class="description">Use os botões de + e - para ajustar os valores em cada célula. Os valores podem variar de 0 a 100.</p>
+        </header>
+        
+        <div class="table-container">
+            <table id="schedule-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <!-- Os cabeçalhos dos dias serão gerados dinamicamente -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- As linhas serão geradas dinamicamente via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="reset-all">Redefinir Todos os Valores</button>
+            <button class="control-btn reset-btn" id="random-values">Preencher com Valores Aleatórios</button>
+            <button class="control-btn export-btn" id="export-table">Exportar como JSON</button>
+            <button class="control-btn image-btn" id="export-image">Exportar como Imagem</button>
+            <button class="control-btn" id="import-table">Importar Tabela</button>
+            <button class="control-btn" id="save-table">Salvar no Navegador</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="total-value">0</div>
+                <div class="stat-label">Total Geral</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="average-value">0</div>
+                <div class="stat-label">Média por Célula</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="max-value">0</div>
+                <div class="stat-label">Valor Máximo</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="min-value">0</div>
+                <div class="stat-label">Valor Mínimo</div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>Como usar:</h3>
+            <ul>
+                <li>Clique nos botões <strong>+</strong> para aumentar o valor em 1</li>
+                <li>Clique nos botões <strong>-</strong> para diminuir o valor em 1</li>
+                <li>Clique no botão <strong>+ Dia</strong> em cada dia da semana para aumentar todos os horários daquele dia</li>
+                <li>Os valores são limitados entre 0 e 100</li>
+                <li>Use "Exportar como JSON" para baixar os dados como arquivo JSON</li>
+                <li>Use "Exportar como Imagem" para baixar a tabela como PNG</li>
+                <li>Use "Importar Tabela" para carregar dados de um arquivo JSON</li>
+                <li>Use "Salvar no Navegador" para guardar os valores atuais</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal para importação de arquivo -->
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">Importar Tabela</h3>
+            <p>Selecione um arquivo JSON previamente exportado:</p>
+            <input type="file" id="file-input" class="file-input" accept=".json">
+            <div class="modal-buttons">
+                <button id="confirm-import" class="modal-btn modal-confirm">Importar</button>
+                <button id="cancel-import" class="modal-btn modal-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast para mensagens -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Incluindo a biblioteca html2canvas para capturar a tabela como imagem -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script>
+        // Horários das aulas (conforme imagem)
+        const classTimes = [
+            "07h15", "08h05", "09h10", "10h00", "11h05", "11h55", "12h45"
+        ];
+        
+        // Dias da semana (exceto a primeira coluna vazia)
+        const weekDays = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA"];
+        
+        // Matriz para armazenar os valores de cada célula
+        let cellValues = [];
+        
+        // Inicializar a matriz com zeros
+        function initializeValues() {
+            cellValues = [];
+            for (let i = 0; i < classTimes.length; i++) {
+                cellValues[i] = [];
+                for (let j = 0; j < weekDays.length; j++) {
+                    cellValues[i][j] = 0;
+                }
+            }
+        }
+        
+        // Mostrar toast (mensagem temporária)
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            
+            if (isError) {
+                toast.classList.add('error');
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Mostrar modal
+        function showModal() {
+            document.getElementById('import-modal').classList.add('show');
+        }
+        
+        // Esconder modal
+        function hideModal() {
+            document.getElementById('import-modal').classList.remove('show');
+            document.getElementById('file-input').value = '';
+        }
+        
+        // Atualizar estatísticas
+        function updateStats() {
+            let total = 0;
+            let count = 0;
+            let max = 0;
+            let min = 100;
+            
+            for (let i = 0; i < classTimes.length; i++) {
+                for (let j = 0; j < weekDays.length; j++) {
+                    const value = cellValues[i][j];
+                    total += value;
+                    count++;
+                    
+                    if (value > max) max = value;
+                    if (value < min) min = value;
+                }
+            }
+            
+            const average = count > 0 ? (total / count).toFixed(1) : 0;
+            
+            document.getElementById('total-value').textContent = total;
+            document.getElementById('average-value').textContent = average;
+            document.getElementById('max-value').textContent = max;
+            document.getElementById('min-value').textContent = min;
+        }
+        
+        // Criar a tabela
+        function createTable() {
+            const thead = document.querySelector('#schedule-table thead tr');
+            const tbody = document.querySelector('#schedule-table tbody');
+            
+            // Limpar tabela
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            
+            // Adicionar célula vazia no cabeçalho
+            const emptyHeader = document.createElement('th');
+            thead.appendChild(emptyHeader);
+            
+            // Adicionar cabeçalhos dos dias com botões
+            for (let j = 0; j < weekDays.length; j++) {
+                const dayHeader = document.createElement('th');
+                
+                const dayHeaderContent = document.createElement('div');
+                dayHeaderContent.className = 'day-header';
+                
+                const dayTitle = document.createElement('div');
+                dayTitle.className = 'day-title';
+                dayTitle.textContent = weekDays[j];
+                
+                const dayControls = document.createElement('div');
+                dayControls.className = 'day-control';
+                
+                // Botão para aumentar todos os horários do dia
+                const increaseAllBtn = document.createElement('button');
+                increaseAllBtn.className = 'day-btn';
+                increaseAllBtn.textContent = '+ Dia';
+                increaseAllBtn.dataset.dayIndex = j;
+                increaseAllBtn.addEventListener('click', (e) => {
+                    const dayIndex = parseInt(e.target.dataset.dayIndex);
+                    increaseAllInDay(dayIndex);
+                });
+                
+                dayControls.appendChild(increaseAllBtn);
+                
+                dayHeaderContent.appendChild(dayTitle);
+                dayHeaderContent.appendChild(dayControls);
+                dayHeader.appendChild(dayHeaderContent);
+                thead.appendChild(dayHeader);
+            }
+            
+            // Adicionar linhas com horários
+            for (let i = 0; i < classTimes.length; i++) {
+                const row = document.createElement('tr');
+                
+                // Adicionar célula de horário
+                const timeCell = document.createElement('td');
+                timeCell.textContent = classTimes[i];
+                timeCell.className = 'time-cell';
+                row.appendChild(timeCell);
+                
+                // Adicionar células editáveis para cada dia
+                for (let j = 0; j < weekDays.length; j++) {
+                    const cell = document.createElement('td');
+                    cell.className = 'editable-cell';
+                    
+                    // Container do contador
+                    const counterContainer = document.createElement('div');
+                    counterContainer.className = 'counter-container';
+                    
+                    // Botão de subtrair
+                    const subtractBtn = document.createElement('button');
+                    subtractBtn.className = 'btn btn-subtract';
+                    subtractBtn.textContent = '−';
+                    subtractBtn.addEventListener('click', () => changeValue(i, j, -1));
+                    
+                    // Valor atual
+                    const valueDisplay = document.createElement('div');
+                    valueDisplay.className = 'counter-value';
+                    valueDisplay.id = `value-${i}-${j}`;
+                    valueDisplay.textContent = cellValues[i][j];
+                    
+                    // Botão de adicionar
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'btn btn-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', () => changeValue(i, j, 1));
+                    
+                    // Montar o contador
+                    counterContainer.appendChild(subtractBtn);
+                    counterContainer.appendChild(valueDisplay);
+                    counterContainer.appendChild(addBtn);
+                    
+                    cell.appendChild(counterContainer);
+                    row.appendChild(cell);
+                }
+                
+                tbody.appendChild(row);
+            }
+            
+            updateStats();
+        }
+        
+        // Aumentar todos os valores de um dia específico
+        function increaseAllInDay(dayIndex) {
+            for (let i = 0; i < classTimes.length; i++) {
+                changeValue(i, dayIndex, 1);
+            }
+        }
+        
+        // Alterar valor de uma célula
+        function changeValue(row, col, delta) {
+            let newValue = cellValues[row][col] + delta;
+            
+            // Garantir que o valor esteja entre 0 e 100
+            if (newValue < 0) newValue = 0;
+            if (newValue > 100) newValue = 100;
+            
+            cellValues[row][col] = newValue;
+            
+            // Atualizar exibição
+            document.getElementById(`value-${row}-${col}`).textContent = newValue;
+            
+            // Atualizar estatísticas
+            updateStats();
+        }
+        
+        // Redefinir todos os valores para zero
+        function resetAllValues() {
+            if (confirm("Tem certeza que deseja redefinir todos os valores para zero?")) {
+                initializeValues();
+                
+                // Atualizar todos os displays
+                for (let i = 0; i < classTimes.length; i++) {
+                    for (let j = 0; j < weekDays.length; j++) {
+                        document.getElementById(`value-${i}-${j}`).textContent = 0;
+                    }
+                }
+                
+                updateStats();
+                showToast("Todos os valores foram redefinidos para zero");
+            }
+        }
+        
+        // Preencher com valores aleatórios
+        function fillRandomValues() {
+            for (let i = 0; i < classTimes.length; i++) {
+                for (let j = 0; j < weekDays.length; j++) {
+                    const randomValue = Math.floor(Math.random() * 101); // 0 a 100
+                    cellValues[i][j] = randomValue;
+                    document.getElementById(`value-${i}-${j}`).textContent = randomValue;
+                }
+            }
+            
+            updateStats();
+            showToast("Valores aleatórios preenchidos com sucesso");
+        }
+        
+        // Exportar tabela como arquivo JSON
+        function exportTable() {
+            try {
+                // Criar objeto com os dados da tabela
+                const exportData = {
+                    version: "1.0",
+                    exportDate: new Date().toISOString(),
+                    tableData: cellValues,
+                    metadata: {
+                        rows: classTimes.length,
+                        columns: weekDays.length,
+                        classTimes: classTimes,
+                        weekDays: weekDays
+                    }
+                };
+                
+                // Converter para JSON
+                const jsonData = JSON.stringify(exportData, null, 2);
+                
+                // Criar blob e link para download
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                // Criar elemento de download
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Gerar nome do arquivo com data
+                const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const timeStr = new Date().toTimeString().slice(0, 8).replace(/:/g, '');
+                a.download = `tabela-horario-${dateStr}_${timeStr}.json`;
+                
+                // Disparar o download
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpar
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                showToast("Tabela exportada como JSON com sucesso! O download começará automaticamente.");
+                
+            } catch (error) {
+                showToast("Erro ao exportar a tabela: " + error.message, true);
+            }
+        }
+        
+        // Exportar tabela como imagem PNG
+        function exportTableAsImage() {
+            try {
+                showToast("Gerando imagem da tabela... Aguarde!");
+                
+                // Capturar apenas a tabela
+                const tableElement = document.getElementById('schedule-table');
+                
+                // Opções para html2canvas
+                const options = {
+                    backgroundColor: '#ffffff',
+                    scale: 2, // Maior resolução
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true,
+                    onclone: function(clonedDoc) {
+                        // Garantir que a tabela apareça bem na imagem
+                        const clonedTable = clonedDoc.getElementById('schedule-table');
+                        clonedTable.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+                        clonedTable.style.borderRadius = '5px';
+                        clonedTable.style.overflow = 'hidden';
+                    }
+                };
+                
+                // Usar html2canvas para capturar a tabela
+                html2canvas(tableElement, options).then(function(canvas) {
+                    // Converter canvas para imagem
+                    const imageData = canvas.toDataURL('image/png');
+                    
+                    // Criar link de download
+                    const link = document.createElement('a');
+                    
+                    // Gerar nome do arquivo com data
+                    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                    const timeStr = new Date().toTimeString().slice(0, 8).replace(/:/g, '');
+                    link.download = `tabela-horario-${dateStr}_${timeStr}.png`;
+                    
+                    link.href = imageData;
+                    
+                    // Disparar o download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showToast("Imagem da tabela gerada com sucesso! O download começará automaticamente.");
+                }).catch(function(error) {
+                    showToast("Erro ao gerar imagem: " + error.message, true);
+                });
+                
+            } catch (error) {
+                showToast("Erro ao exportar como imagem: " + error.message, true);
+            }
+        }
+        
+        // Importar tabela de arquivo JSON
+        function importTable() {
+            // Mostrar modal de importação
+            showModal();
+        }
+        
+        // Processar arquivo importado
+        function processImportedFile(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Verificar estrutura do arquivo
+                    if (!importedData.tableData || !Array.isArray(importedData.tableData)) {
+                        throw new Error("Formato de arquivo inválido: dados da tabela não encontrados");
+                    }
+                    
+                    // Verificar dimensões
+                    if (importedData.tableData.length !== classTimes.length || 
+                        importedData.tableData[0].length !== weekDays.length) {
+                        throw new Error(`Dimensões do arquivo (${importedData.tableData.length}x${importedData.tableData[0].length}) não correspondem à tabela atual (${classTimes.length}x${weekDays.length})`);
+                    }
+                    
+                    // Aplicar dados importados
+                    cellValues = importedData.tableData;
+                    
+                    // Atualizar todos os displays
+                    for (let i = 0; i < classTimes.length; i++) {
+                        for (let j = 0; j < weekDays.length; j++) {
+                            // Garantir que os valores estão entre 0 e 100
+                            if (cellValues[i][j] < 0) cellValues[i][j] = 0;
+                            if (cellValues[i][j] > 100) cellValues[i][j] = 100;
+                            
+                            document.getElementById(`value-${i}-${j}`).textContent = cellValues[i][j];
+                        }
+                    }
+                    
+                    updateStats();
+                    showToast('Tabela importada com sucesso!');
+                    
+                } catch (error) {
+                    showToast('Erro ao importar o arquivo: ' + error.message, true);
+                }
+                
+                // Fechar modal
+                hideModal();
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Salvar tabela no localStorage
+        function saveTable() {
+            try {
+                localStorage.setItem('scheduleTableData', JSON.stringify(cellValues));
+                showToast('Tabela salva no navegador com sucesso!');
+            } catch (e) {
+                showToast('Erro ao salvar a tabela: ' + e.message, true);
+            }
+        }
+        
+        // Carregar tabela do localStorage
+        function loadTable() {
+            try {
+                const savedData = localStorage.getItem('scheduleTableData');
+                
+                if (savedData) {
+                    const loadedValues = JSON.parse(savedData);
+                    
+                    // Verificar se os dados carregados têm o tamanho correto
+                    if (loadedValues.length === classTimes.length && 
+                        loadedValues[0].length === weekDays.length) {
+                        
+                        cellValues = loadedValues;
+                        
+                        // Atualizar todos os displays
+                        for (let i = 0; i < classTimes.length; i++) {
+                            for (let j = 0; j < weekDays.length; j++) {
+                                document.getElementById(`value-${i}-${j}`).textContent = cellValues[i][j];
+                            }
+                        }
+                        
+                        updateStats();
+                        console.log('Tabela carregada do navegador com sucesso!');
+                    } else {
+                        console.warn('Os dados salvos não correspondem ao formato da tabela atual.');
+                    }
+                }
+            } catch (e) {
+                console.error('Erro ao carregar a tabela: ' + e.message);
+            }
+        }
+        
+        // Inicializar a aplicação
+        function initializeApp() {
+            initializeValues();
+            createTable();
+            
+            // Configurar eventos dos botões de controle
+            document.getElementById('reset-all').addEventListener('click', resetAllValues);
+            document.getElementById('random-values').addEventListener('click', fillRandomValues);
+            document.getElementById('export-table').addEventListener('click', exportTable);
+            document.getElementById('export-image').addEventListener('click', exportTableAsImage);
+            document.getElementById('import-table').addEventListener('click', importTable);
+            document.getElementById('save-table').addEventListener('click', saveTable);
+            
+            // Configurar eventos do modal de importação
+            document.getElementById('confirm-import').addEventListener('click', () => {
+                const fileInput = document.getElementById('file-input');
+                if (fileInput.files.length > 0) {
+                    processImportedFile(fileInput.files[0]);
+                } else {
+                    showToast('Por favor, selecione um arquivo para importar.', true);
+                }
+            });
+            
+            document.getElementById('cancel-import').addEventListener('click', () => {
+                hideModal();
+            });
+            
+            // Fechar modal ao clicar fora
+            document.getElementById('import-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'import-modal') {
+                    hideModal();
+                }
+            });
+            
+            // Fechar modal com a tecla ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    hideModal();
+                }
+            });
+            
+            // Carregar dados salvos automaticamente, se existirem
+            setTimeout(loadTable, 500);
+        }
+        
+        // Iniciar quando o documento estiver carregado
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
